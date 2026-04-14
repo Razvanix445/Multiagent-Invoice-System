@@ -1,0 +1,17 @@
+services:
+  ejabberd:
+    image: ejabberd/ecs
+    restart: unless-stopped
+    ports:
+      - 5222:5222
+      - 5280:5280
+    environment:
+      - EJABBERD_ADMIN=admin
+      - EJABBERD_PASSWORD=password
+      - XMPP_DOMAIN=localhost
+      - EJABBERD_C2S_TIMEOUT=600
+    volumes:
+      - ejabberd_data:/home/ejabberd/database
+
+volumes:
+  ejabberd_data:

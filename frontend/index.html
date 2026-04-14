@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Pipeline — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0c0e10;
+    --bg2:      #13161a;
+    --bg3:      #1a1e24;
+    --border:   #252a32;
+    --border2:  #2e3540;
+    --text:     #e8eaed;
+    --muted:    #6b7280;
+    --accent:   #00d4aa;
+    --accent2:  #0099ff;
+    --warn:     #f59e0b;
+    --danger:   #ef4444;
+    --success:  #10b981;
+    --mono:     'DM Mono', monospace;
+    --display:  'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Grid background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Layout ── */
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-mark {
+    width: 38px;
+    height: 38px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .logo h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .logo span {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    margin-top: 1px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  /* ── Stats bar ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border2); }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-value.accent  { color: var(--accent); }
+  .stat-value.warn    { color: var(--warn); }
+  .stat-value.danger  { color: var(--danger); }
+  .stat-value.success { color: var(--success); }
+
+  /* ── Main columns ── */
+  .main-cols {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ── Panel ── */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .panel-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    margin: 20px;
+    border: 2px dashed var(--border2);
+    border-radius: 12px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .upload-zone:hover,
+  .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0, 212, 170, 0.04);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .upload-zone h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .upload-zone p {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  /* ── Upload button ── */
+  .btn-upload {
+    display: block;
+    width: calc(100% - 40px);
+    margin: 0 20px 20px;
+    padding: 13px;
+    background: var(--accent);
+    color: #0c0e10;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: -0.01em;
+  }
+
+  .btn-upload:hover   { background: #00bfa0; transform: translateY(-1px); }
+  .btn-upload:active  { transform: translateY(0); }
+  .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── Pipeline stages ── */
+  .stages {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .stage {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    transition: all 0.3s;
+  }
+
+  .stage.active  { border-color: var(--accent2); background: rgba(0,153,255,0.06); }
+  .stage.done    { border-color: var(--success);  background: rgba(16,185,129,0.06); }
+  .stage.failed  { border-color: var(--danger);   background: rgba(239,68,68,0.06); }
+
+  .stage-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: var(--bg2);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .stage.done   .stage-icon { background: rgba(16,185,129,0.15); }
+  .stage.active .stage-icon { background: rgba(0,153,255,0.15); }
+
+  .stage-info { flex: 1; min-width: 0; }
+
+  .stage-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .stage-detail {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stage-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+
+  .stage.done   .stage-status { background: rgba(16,185,129,0.15);  color: var(--success); }
+  .stage.active .stage-status { background: rgba(0,153,255,0.15);   color: var(--accent2); }
+  .stage.failed .stage-status { background: rgba(239,68,68,0.15);   color: var(--danger); }
+  .stage        .stage-status { background: var(--bg);              color: var(--muted); }
+
+  /* ── Decision badge ── */
+  .decision-box {
+    margin: 0 20px 20px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  .decision-box.show { display: block; }
+
+  .decision-box.approved { border-color: var(--success); background: rgba(16,185,129,0.08); }
+  .decision-box.escalated { border-color: var(--warn);  background: rgba(245,158,11,0.08); }
+  .decision-box.rejected  { border-color: var(--danger); background: rgba(239,68,68,0.08); }
+
+  .decision-label {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .decision-value {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .decision-box.approved  .decision-value { color: var(--success); }
+  .decision-box.escalated .decision-value { color: var(--warn); }
+  .decision-box.rejected  .decision-value { color: var(--danger); }
+
+  .decision-reason {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  /* ── History panel ── */
+  .search-bar {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  .history-list {
+    max-height: 580px;
+    overflow-y: auto;
+  }
+
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .history-row {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .history-row:hover { background: var(--bg3); }
+  .history-row:last-child { border-bottom: none; }
+
+  .decision-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-approve  { background: var(--success); }
+  .dot-escalate { background: var(--warn); }
+  .dot-reject   { background: var(--danger); }
+
+  .row-main { min-width: 0; }
+
+  .row-id {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .row-vendor {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-amount {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .row-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .empty-state {
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  /* ── Modal (invoice detail) ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 28px;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .close-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: color 0.2s;
+  }
+
+  .close-btn:hover { color: var(--text); }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .detail-field {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .detail-key {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  .detail-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .audit-trail {
+    margin-top: 16px;
+  }
+
+  .audit-trail h4 {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .audit-entry {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .audit-entry:last-child { border-bottom: none; }
+
+  .audit-time { color: var(--muted); flex-shrink: 0; width: 70px; }
+  .audit-agent { color: var(--accent); flex-shrink: 0; width: 140px; }
+  .audit-action { color: var(--text); flex-shrink: 0; width: 160px; }
+  .audit-detail { color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── Spinner ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    z-index: 200;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+  .toast.ok    { border-color: var(--success); color: var(--success); }
+
+  @media (max-width: 900px) {
+    .main-cols { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">🧾</div>
+      <div>
+        <h1>Invoice Pipeline</h1>
+        <span>Multi-Agent Processing System · SPADE + XMPP</span>
+      </div>
+    </div>
+    <div class="status-pill">
+      <div class="dot" id="conn-dot"></div>
+      <span id="conn-label">Connecting...</span>
+    </div>
+  </header>
+
+  <!-- Stats bar -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Processed</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Auto-Approved</div>
+      <div class="stat-value success" id="stat-approved">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Escalated</div>
+      <div class="stat-value warn" id="stat-escalated">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Rejected</div>
+      <div class="stat-value danger" id="stat-rejected">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Value (EUR)</div>
+      <div class="stat-value accent" id="stat-value">—</div>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="main-cols">
+
+    <!-- LEFT: Upload + Live Pipeline -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Upload panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Submit Invoice</span>
+          <span class="panel-badge">PDF · Scanned</span>
+        </div>
+
+        <div class="upload-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".pdf">
+          <div class="upload-icon">📄</div>
+          <h3>Drop PDF here</h3>
+          <p id="file-label">or click to browse — scanned invoices supported</p>
+        </div>
+
+        <button class="btn-upload" id="upload-btn" disabled onclick="uploadFile()">
+          Process Invoice
+        </button>
+      </div>
+
+      <!-- Live pipeline stages -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Pipeline Progress</span>
+          <span class="panel-badge" id="pipeline-id-label">idle</span>
+        </div>
+
+        <div class="stages">
+          <div class="stage" id="stage-ingestion">
+            <div class="stage-icon">📥</div>
+            <div class="stage-info">
+              <div class="stage-name">Ingestion Agent</div>
+              <div class="stage-detail" id="detail-ingestion">OCR + Ollama extraction</div>
+            </div>
+            <div class="stage-status">waiting</div>
+          </div>
+          <div class="stage" id="stage-validation">
+            <div class="stage-icon">🔍</div>
+            <div class="stage-info">
+              <div class="stage-name">Validation Agent</div>
+              <div class="stage-detail" id="detail-validation">totals · vendor · VAT · duplicates</div>
+            </div>
+            <div class="stage-status">waiting</div>
+          </div>
+          <div class="stage" id="stage-decision">
+            <div class="stage-icon">⚖️</div>
+            <div class="stage-info">
+              <div class="stage-name">Decision Agent</div>
+              <div class="stage-detail" id="detail-decision">business rule engine</div>
+            </div>
+            <div class="stage-status">waiting</div>
+          </div>
+          <div class="stage" id="stage-communication">
+            <div class="stage-icon">📨</div>
+            <div class="stage-info">
+              <div class="stage-name">Communication Agent</div>
+              <div class="stage-detail" id="detail-communication">email + slack notification</div>
+            </div>
+            <div class="stage-status">waiting</div>
+          </div>
+          <div class="stage" id="stage-audit">
+            <div class="stage-icon">🗄️</div>
+            <div class="stage-info">
+              <div class="stage-name">Audit Agent</div>
+              <div class="stage-detail" id="detail-audit">JSONL persistence</div>
+            </div>
+            <div class="stage-status">waiting</div>
+          </div>
+        </div>
+
+        <!-- Decision result -->
+        <div class="decision-box" id="decision-box">
+          <div class="decision-label">PIPELINE DECISION</div>
+          <div class="decision-value" id="decision-value">—</div>
+          <div class="decision-reason" id="decision-reason">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: History -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Audit History</span>
+        <span class="panel-badge" id="history-count">0 records</span>
+      </div>
+      <div class="search-bar">
+        <input
+          class="search-input"
+          id="search-input"
+          placeholder="Search by invoice ID, vendor, decision..."
+          oninput="searchHistory(this.value)"
+        >
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="empty-state">No invoices processed yet.<br>Upload a PDF to get started.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice detail modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Invoice Detail</div>
+      <button class="close-btn" onclick="closeModal()">✕ close</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let currentWS = null;
+let searchTimer = null;
+
+// ── Startup ──────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  await loadStats();
+  await loadHistory();
+  checkAPIHealth();
+  setInterval(loadStats, 15000);
+});
+
+async function checkAPIHealth() {
+  try {
+    await fetch(`${API}/stats`);
+    setConnected(true);
+  } catch {
+    setConnected(false);
+  }
+}
+
+function setConnected(ok) {
+  const dot   = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  dot.style.background = ok ? 'var(--success)' : 'var(--danger)';
+  label.textContent    = ok ? 'API connected' : 'API offline';
+}
+
+// ── File drag & drop ─────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') {
+    document.getElementById('file-input').files = e.dataTransfer.files;
+    onFileSelected(file);
+  }
+});
+
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) onFileSelected(file);
+});
+
+function onFileSelected(file) {
+  document.getElementById('file-label').textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+  document.getElementById('upload-btn').disabled = false;
+}
+
+// ── Upload & pipeline tracking ───────────────────────────────
+async function uploadFile() {
+    const input = document.getElementById('file-input');
+    if (!input.files[0]) return;
+
+    const btn = document.getElementById('upload-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Processing...';
+
+    resetPipeline();
+
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+
+    try {
+        const res  = await fetch(`${API}/upload/pdf`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Upload failed');
+
+        document.getElementById('pipeline-id-label').textContent = data.pipeline_id;
+        toast(`Pipeline started: ${data.pipeline_id}`, 'ok');
+
+        // Poll for completion instead of WebSocket
+        pollForCompletion(data.pipeline_id);
+
+    } catch (e) {
+        toast(`Error: ${e.message}`, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Process Invoice';
+    }
+}
+
+async function pollForCompletion(pipelineId) {
+    const maxAttempts = 60;  // 60 * 2s = 2 minutes max
+    let attempts = 0;
+
+    const interval = setInterval(async () => {
+        attempts++;
+        try {
+            const res = await fetch(`${API}/invoice/${pipelineId}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === 'archived') {
+                    clearInterval(interval);
+
+                    // Mark all stages done
+                    ['ingestion','validation','decision','communication','audit'].forEach(s => {
+                        updateStage(s, 'done', '');
+                    });
+
+                    showDecision(data.decision, data.decision_reason);
+                    await loadHistory();
+                    await loadStats();
+
+                    const btn = document.getElementById('upload-btn');
+                    btn.disabled = false;
+                    btn.textContent = 'Process Invoice';
+                    toast('Pipeline complete!', 'ok');
+                }
+            }
+        } catch (e) {}
+
+        if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            toast('Timeout — reload the page to see results', 'error');
+            const btn = document.getElementById('upload-btn');
+            btn.disabled = false;
+            btn.textContent = 'Process Invoice';
+        }
+    }, 2000);  // check every 2 seconds
+}
+
+function connectWebSocket() {
+    const ws = new WebSocket('ws://127.0.0.1:8000/ws');
+
+    ws.onopen = () => {
+        setConnected(true);
+    };
+
+    ws.onmessage = (e) => {
+        const event = JSON.parse(e.data);
+        handlePipelineEvent(event);
+    };
+
+    ws.onclose = () => {
+        setConnected(false);
+        // Reconnect after 3 seconds
+        setTimeout(connectWebSocket, 3000);
+    };
+
+    ws.onerror = () => setConnected(false);
+}
+
+function handlePipelineEvent(event) {
+  if (event.event === 'pipeline_update') {
+    updateStage(event.stage, event.status, event.detail || '');
+  }
+
+  if (event.event === 'pipeline_complete') {
+    updateStage('audit', 'done', 'Archived to JSONL');
+    showDecision(event.decision, event.decision_reason);
+    loadHistory();
+    loadStats();
+
+    const btn = document.getElementById('upload-btn');
+    btn.disabled = false;
+    btn.textContent = 'Process Invoice';
+    toast('Pipeline complete!', 'ok');
+  }
+
+  if (event.event === 'stats_update') {
+    renderStats(event.stats);
+  }
+}
+
+const STAGE_MAP = {
+  'ingestion':     'stage-ingestion',
+  'validation':    'stage-validation',
+  'decision':      'stage-decision',
+  'communication': 'stage-communication',
+  'audit':         'stage-audit',
+};
+
+function updateStage(stage, status, detail) {
+  const id  = STAGE_MAP[stage];
+  if (!id) return;
+  const el  = document.getElementById(id);
+  const det = document.getElementById(`detail-${stage}`);
+  const sta = el.querySelector('.stage-status');
+
+  // Clear previous state
+  el.classList.remove('active', 'done', 'failed');
+
+  if (status === 'active' || status === 'processing') {
+    el.classList.add('active');
+    sta.textContent = 'processing';
+    sta.innerHTML   = '<span class="spinner"></span>';
+  } else if (['done', 'valid', 'extracted', 'archived', 'notified', 'auto_approved', 'escalated'].includes(status)) {
+    el.classList.add('done');
+    sta.textContent = '✓ done';
+  } else if (['failed', 'invalid', 'rejected'].includes(status)) {
+    el.classList.add('failed');
+    sta.textContent = '✗ failed';
+  }
+
+  if (detail) det.textContent = detail;
+}
+
+function showDecision(decision, reason) {
+  const box = document.getElementById('decision-box');
+  const val = document.getElementById('decision-value');
+  const rea = document.getElementById('decision-reason');
+
+  box.className = 'decision-box show';
+  if (decision === 'auto_approve') {
+    box.classList.add('approved');
+    val.textContent = '✓ AUTO-APPROVED';
+  } else if (decision === 'escalate') {
+    box.classList.add('escalated');
+    val.textContent = '⚠ ESCALATED';
+  } else {
+    box.classList.add('rejected');
+    val.textContent = '✗ REJECTED';
+  }
+  rea.textContent = reason || '';
+}
+
+function resetPipeline() {
+  ['ingestion','validation','decision','communication','audit'].forEach(s => {
+    const el  = document.getElementById(`stage-${s}`);
+    const sta = el.querySelector('.stage-status');
+    el.classList.remove('active','done','failed');
+    sta.textContent = 'waiting';
+  });
+  const box = document.getElementById('decision-box');
+  box.className = 'decision-box';
+}
+
+// ── Stats ────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res   = await fetch(`${API}/stats`);
+    const stats = await res.json();
+    renderStats(stats);
+  } catch {}
+}
+
+function renderStats(s) {
+  document.getElementById('stat-total').textContent    = s.total;
+  document.getElementById('stat-approved').textContent = s.auto_approved;
+  document.getElementById('stat-escalated').textContent= s.escalated;
+  document.getElementById('stat-rejected').textContent = s.rejected;
+  document.getElementById('stat-value').textContent    =
+    s.total_value >= 1000
+      ? `${(s.total_value/1000).toFixed(1)}k`
+      : s.total_value.toFixed(0);
+}
+
+// ── History ──────────────────────────────────────────────────
+async function loadHistory(search = '') {
+  try {
+    const url  = `${API}/history?limit=100&search=${encodeURIComponent(search)}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    renderHistory(data);
+  } catch {}
+}
+
+function renderHistory(records) {
+  const list  = document.getElementById('history-list');
+  const count = document.getElementById('history-count');
+  count.textContent = `${records.length} records`;
+
+  if (!records.length) {
+    list.innerHTML = '<div class="empty-state">No records found.</div>';
+    return;
+  }
+
+  list.innerHTML = records.map(r => {
+    const decision = r.decision || 'unknown';
+    const dotClass = decision === 'auto_approve' ? 'dot-approve'
+                   : decision === 'escalate'     ? 'dot-escalate'
+                   : 'dot-reject';
+    const time = r.created_at ? r.created_at.slice(11,19) : '';
+    const date = r.created_at ? r.created_at.slice(0,10) : '';
+    const amount = `${(r.invoice_total||0).toFixed(2)} ${r.currency||''}`;
+
+    return `
+      <div class="history-row" onclick="showInvoiceDetail('${r.pipeline_id}')">
+        <div class="decision-dot ${dotClass}"></div>
+        <div class="row-main">
+          <div class="row-id">${r.invoice_id || r.pipeline_id}</div>
+          <div class="row-vendor">${r.vendor_name || 'Unknown vendor'}</div>
+        </div>
+        <div class="row-amount">${amount}</div>
+        <div class="row-time">${date}<br>${time}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function searchHistory(val) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadHistory(val), 300);
+}
+
+// ── Invoice detail modal ─────────────────────────────────────
+async function showInvoiceDetail(pipelineId) {
+  try {
+    const res  = await fetch(`${API}/invoice/${pipelineId}`);
+    const data = await res.json();
+    renderModal(data);
+    document.getElementById('modal').classList.add('open');
+  } catch {
+    toast('Could not load invoice details', 'error');
+  }
+}
+
+function renderModal(r) {
+  document.getElementById('modal-title').textContent = `Invoice ${r.invoice_id || r.pipeline_id}`;
+
+  const decisionColor = r.decision === 'auto_approve' ? 'var(--success)'
+                      : r.decision === 'escalate'     ? 'var(--warn)'
+                      : 'var(--danger)';
+
+  const fields = [
+    ['Pipeline ID',    r.pipeline_id],
+    ['Invoice ID',     r.invoice_id],
+    ['Vendor',         r.vendor_name],
+    ['Vendor ID',      r.vendor_id],
+    ['Invoice Date',   r.invoice_date],
+    ['Due Date',       r.due_date],
+    ['Currency',       r.currency],
+    ['Subtotal',       `${(r.subtotal||0).toFixed(2)}`],
+    ['VAT',            `${r.vat_rate}% → ${(r.vat_amount||0).toFixed(2)}`],
+    ['Total',          `${(r.invoice_total||0).toFixed(2)} ${r.currency}`],
+    ['Decision',       r.decision?.toUpperCase().replace('_',' ')],
+    ['Notification',   r.notification_sent ? `✓ ${r.notification_channel}` : '—'],
+  ];
+
+  const fieldHTML = fields.map(([k, v]) => `
+    <div class="detail-field">
+      <div class="detail-key">${k}</div>
+      <div class="detail-val" style="${k==='Decision'?`color:${decisionColor}`:''}">
+        ${v || '—'}
+      </div>
+    </div>
+  `).join('');
+
+  const auditHTML = (r.audit_log || []).map(e => `
+    <div class="audit-entry">
+      <div class="audit-time">${(e.timestamp||'').slice(11,19)}</div>
+      <div class="audit-agent">${e.agent||''}</div>
+      <div class="audit-action">${e.action||''}</div>
+      <div class="audit-detail">${e.detail||''}</div>
+    </div>
+  `).join('');
+
+  const validationErrors = r.validation?.errors?.length
+    ? `<div style="margin-top:12px;padding:12px;background:rgba(239,68,68,0.08);
+         border:1px solid rgba(239,68,68,0.2);border-radius:10px;">
+        <div class="detail-key" style="margin-bottom:8px;">VALIDATION ERRORS</div>
+        ${r.validation.errors.map(e=>`
+          <div style="font-family:var(--mono);font-size:11px;color:var(--danger);
+               padding:3px 0;border-bottom:1px solid rgba(239,68,68,0.15);">${e}</div>
+        `).join('')}
+      </div>` : '';
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-grid">${fieldHTML}</div>
+    ${validationErrors}
+    <div class="audit-trail">
+      <h4>Audit Trail — ${(r.audit_log||[]).length} events</h4>
+      ${auditHTML}
+    </div>
+  `;
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent  = msg;
+  el.className    = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
