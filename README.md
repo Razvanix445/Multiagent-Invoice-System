@@ -1,9 +1,11 @@
-# Multiagent Invoice System
+# Invoxa - Multiagent Invoice System
 ### SPADE + XMPP + Ollama
 
 An automated invoice processing system built with autonomous agents. Upload a PDF invoice and watch it flow through ingestion, validation, decision-making, notification, and audit, all handled by independent agents communicating over XMPP.
 
 ---
+
+[Invoxa Demo](https://github.com/Razvanix445/Multiagent-Invoice-System/blob/main/invoxa-demo.mp4)
 
 ## Architecture
  
